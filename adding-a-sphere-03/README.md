@@ -10,3 +10,4 @@ Hence
 t*t*dot(B, B) + 2*t*dot(B,A-c) + dot(A-c, A-c) = R*R
 ```
 This is an simple quadratic equation. Ray hits the sphere it determinant of this quation is greater than 0.
+Our code colors image with default background unless a ray hits the sphere then it colors it red. Problem with this approach is that we can see object behind the camera., i.e. if we move our shere to center at `(0,0,1)` then program outputs the same image.
