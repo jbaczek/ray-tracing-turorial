@@ -1,0 +1,3 @@
+## Rays
+
+By `ray` we will understand just a line in 3D space represented in form `r(t) = A + t*B`. `A` is the origin of the ray `r`, `B` is it's direction and `t` is a real parameter. For example to obtain specific point along the ray we plug certain parameter, like `2`, to get `r(2) = A + 2*B`. In `main.cpp` file we declare the origin to be at `(0,0,0)`. It's the position where our "camera" is placed. Function `color` defines background color. It takes y coordinate of the direction where our ray is pointing and based on that fill the image with gradient from white at the bottom to blue at the top.
