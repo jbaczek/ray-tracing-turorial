@@ -4,7 +4,7 @@
 
 float rand_float()
 {
-    return float(std::rand())/(float(RAND_MAX)+1.0);
+    return float(rand())/(float(RAND_MAX)+1.0);
 }
 
 vec3 random_in_unit_sphere()
