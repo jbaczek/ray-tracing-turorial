@@ -1,10 +1,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
-
+#include <curand_kernel.h>
 #include "vec3.h"
 #include "ray.h"
 #include "rand_vec.h"
-
 
 class camera
 {
@@ -24,9 +23,9 @@ class camera
             vertical = 2*half_height*focus_dist*v;
         }
 
-        __device__ ray get_ray(float s, float t) 
+        __device__ ray get_ray(float s, float t, curandState* rand_state) 
         {
-            vec3 rd = lens_radius*random_in_unit_circle();
+            vec3 rd = lens_radius*random_in_unit_circle(rand_state);
             vec3 offset = u*rd.x() + v*rd.y();
             return ray(origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);
         }
