@@ -68,7 +68,7 @@ __global__ void free_world(hitable **d_list, hitable **d_world)
     delete *d_world;
 }
 
-__global__ void create_camera(camera** cam)
+__global__ void create_camera(camera** cam, int nx, int ny)
 {
     if(threadIdx.x==0 && blockIdx.x==0)
     {
@@ -76,7 +76,7 @@ __global__ void create_camera(camera** cam)
         vec3 lookat(0.0, 0.0, -1.0);
         vec3 vup(0.0, 1.0, 0.0);
         float vfov = 90.0;
-        float aspect = 2.0;
+        float aspect = float(nx)/float(ny);
         float aperture = 0.0;
         float focus_dist = (lookat-lookfrom).length();
         *cam = new camera(lookfrom, lookat, vup, vfov, aspect, aperture, focus_dist);
@@ -111,13 +111,21 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* rand_state)
         }
         else
         {
-            vec3 unit_direction = unit_vector(r.direction());
+            vec3 unit_direction = unit_vector(cur_ray.direction());
             float t = 0.5f*(unit_direction.y() + 1.0f);
             vec3 c = (1.0f-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
             return cur_attenuation*c;
         }
     }
     return vec3(0,0,0);
+}
+
+__global__ void rand_init(curandState *rand_state) 
+{
+    if (threadIdx.x == 0 && blockIdx.x == 0)
+    {
+        curand_init(1984, 0, 0, rand_state);
+    }
 }
 
 __global__ void render_init(int max_x, int max_y, curandState* rand_state)
@@ -158,31 +166,31 @@ int main() {
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
 
-    vec3 lower_left_corner(-2.0, -1.0, -1.0);
-    vec3 horizontal(4.0, 0.0, 0.0);
-    vec3 vertical(0.0, 2.0, 0.0);
-    vec3 origin(0.0, 0.0, 0.0);
-
     std::cerr << "Rendering a " << nx << "x" << ny << " image ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
     int num_pixels = nx*ny;
     size_t fb_size = num_pixels*sizeof(vec3);
 
-    // curand init
-    curandState * d_rand_state;
-    checkCudaErrors(cudaMalloc((void**)&d_rand_state, num_pixels*sizeof(curandState)));
-
     // allocate FB
     vec3 *fb;
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
+
+    // curand init
+    curandState* d_rand_state;
+    checkCudaErrors(cudaMalloc((void**)&d_rand_state, num_pixels*sizeof(curandState)));
+    curandState* d_rand_state2;
+    checkCudaErrors(cudaMalloc((void**)&d_rand_state2, sizeof(curandState)));
+    rand_init<<<1,1>>>(d_rand_state2);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     // create world
     hitable **d_list;
     int num_hitables =22*22+4;
     checkCudaErrors(cudaMalloc((void**) &d_list, num_hitables*sizeof(hitable*))); 
     hitable **d_world;
-    checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable *)));
+    checkCudaErrors(cudaMalloc((void**) &d_world, sizeof(hitable*)));
     create_world<<<1,1>>>(d_list,d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -190,7 +198,7 @@ int main() {
     //create camera
     camera **d_cam;
     checkCudaErrors(cudaMalloc((void**) &d_cam, sizeof(camera*)));
-    create_camera<<<1,1>>>(d_cam);
+    create_camera<<<1,1>>>(d_cam, nx, ny);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -202,7 +210,7 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     render<<<blocks, threads>>>(fb, nx, ny, ns, d_cam, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
-    //checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
     double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "took " << timer_seconds << " seconds.\n";
