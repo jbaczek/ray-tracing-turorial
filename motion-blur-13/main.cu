@@ -37,7 +37,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, curandState* r
                 vec3 center(a+RND, 0.2, b+RND);
                 if(choose_mat < 0.8f)
                 {
-                    d_list[i++] = new moving_sphere(center, center+vec3(0,0.5*RND,0), 0.0, 1.0, 0.2,
+                    d_list[i++] = new sphere(center, center+vec3(0,0.5*RND,0), 0.0, 1.0, 0.2,
                             new lambertian(vec3(RND*RND, RND*RND, RND*RND)));
                 }
                 else if(choose_mat < 0.95f)
@@ -47,7 +47,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, curandState* r
                 }
                 else
                 {
-                    d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
+                    d_list[i++] = new sphere(center, center, 0.0, 1.0, 0.2, new dielectric(1.5));
                 }
             }
         }
@@ -75,7 +75,7 @@ __global__ void create_camera(camera** cam, int nx, int ny)
         vec3 lookfrom(13, 2, 3);
         vec3 lookat(0.0, 0.0, 0);
         vec3 vup(0, 1, 0);
-        float vfov = 20.0;
+        float vfov = 30.0;
         float aspect = float(nx)/float(ny);
         float aperture = 0.0;
         float focus_dist = (lookat-lookfrom).length();
@@ -157,8 +157,8 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera ** cam, hi
 
 
 int main() {
-    int nx = 2000;
-    int ny = 1000;
+    int nx = 1000;
+    int ny = 500;
     int ns = 100;
     int tx = 8;
     int ty = 8;
