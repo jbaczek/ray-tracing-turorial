@@ -11,8 +11,8 @@ class aabb
         __device__ aabb() {}
         __device__ aabb(const vec3& a, const vec3& b) { _min = a; _max = b; }
 
-        vec3 min() const { return _min; }
-        vec3 max() const { return _max; }
+        __device__ vec3 min() const { return _min; }
+        __device__ vec3 max() const { return _max; }
 
         __device__ bool hit(const ray& r, float tmin, float tmax) const;
         vec3 _min;

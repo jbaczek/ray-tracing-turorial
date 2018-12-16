@@ -2,6 +2,7 @@
 #define HITABLE_H
 
 #include "ray.h"
+#include "aabb.h"
 
 class material;
 
