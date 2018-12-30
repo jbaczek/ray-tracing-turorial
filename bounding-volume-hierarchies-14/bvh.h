@@ -2,10 +2,38 @@
 #include <curand_kernel.h>
 #ifndef BVH_H
 #define BVH_H
-
-__device__ int box_x_compare(const void* a, const void* b);
-__device__ int box_y_compare(const void* a, const void* b);
-__device__ int box_z_compare(const void* a, const void* b);
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
+struct box_x_cmp
+{
+    __device__ bool operator()(const hitable* a, const hitable* b)
+    {
+        aabb box_left, box_right;
+        a->bounding_box(0,0,box_left);
+        b->bounding_box(0,0,box_right);
+        return box_left.min().x() > box_right.min().x();
+    }
+};
+struct box_y_cmp
+{
+    __device__ bool operator()(const hitable* a, const hitable* b)
+    {
+        aabb box_left, box_right;
+        a->bounding_box(0,0,box_left);
+        b->bounding_box(0,0,box_right);
+        return box_left.min().y() > box_right.min().y();
+    }
+};
+struct box_z_cmp
+{
+    __device__ bool operator()(const hitable* a, const hitable* b)
+    {
+        aabb box_left, box_right;
+        a->bounding_box(0,0,box_left);
+        b->bounding_box(0,0,box_right);
+        return box_left.min().z() > box_right.min().z();
+    }
+};
 
 class bvh_node : public hitable
 {
@@ -23,11 +51,11 @@ __device__ bvh_node::bvh_node(hitable** l, int n, float time0, float time1, cura
 {
     int axis = int(3*curand_uniform(rand_state));
     if (axis == 0)
-        qsort(l, n, sizeof(hitable*), box_x_compare);
+        thrust::sort(thrust::seq, l, l+n, box_x_cmp());
     else if(axis == 1)
-        qsort(l, n, sizeof(hitable*), box_y_compare);
+        thrust::sort(thrust::seq, l, l+n, box_y_cmp());
     else
-        qsort(l, n, sizeof(hitable*), box_z_compare);
+        thrust::sort(thrust::seq, l, l+n, box_z_cmp());
     if(n == 1)
     {
         left = right = l[0];
@@ -47,45 +75,6 @@ __device__ bvh_node::bvh_node(hitable** l, int n, float time0, float time1, cura
     right->bounding_box(time0, time1, box_right);
     box = surrounding_box(box_left, box_right);
 
-}
-
-__device__ int box_x_compare(const void* a, const void* b)
-{
-    aabb box_left, box_right;
-    hitable* ah = *(hitable**)a;
-    hitable* bh = *(hitable**)b;
-    ah->bounding_box(0,0,box_left);
-    bh->bounding_box(0,0,box_right);
-    if (box_left.min().x() - box_right.min().x() < 0.0 )
-        return -1;
-    else
-        return 1;
-}
-
-__device__ int box_y_compare(const void* a, const void* b)
-{
-    aabb box_left, box_right;
-    hitable* ah = *(hitable**)a;
-    hitable* bh = *(hitable**)b;
-    ah->bounding_box(0,0,box_left);
-    bh->bounding_box(0,0,box_right);
-    if (box_left.min().y() - box_right.min().y() < 0.0 )
-        return -1;
-    else
-        return 1;
-}
-
-__device__ int box_z_compare(const void* a, const void* b)
-{
-    aabb box_left, box_right;
-    hitable* ah = *(hitable**)a;
-    hitable* bh = *(hitable**)b;
-    ah->bounding_box(0,0,box_left);
-    bh->bounding_box(0,0,box_right);
-    if (box_left.min().z() - box_right.min().z() < 0.0 )
-        return -1;
-    else
-        return 1;
 }
 
 __device__ bool bvh_node::bounding_box(float t0, float t1, aabb& b) const

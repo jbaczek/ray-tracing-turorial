@@ -9,6 +9,7 @@
 #include "sphere.h"
 #include "camera.h"
 #include "material.h"
+#include "bvh.h"
 
 #define RND curand_uniform(rand_state)
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
@@ -54,7 +55,9 @@ __global__ void create_world(hitable** d_list, hitable** d_world, curandState* r
         d_list[i++] = new sphere(vec3(0,1,0), 1.0, new dielectric(1.5));
         d_list[i++] = new sphere(vec3(-4,1,0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[i++] = new sphere(vec3(4,1,0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
-        *d_world = new hitable_list(d_list, 22*22+4);
+
+        //*d_world = new hitable_list(d_list, 22*22+4);
+        *d_world = new bvh_node(d_list, 22*22+4, 0.0, 0.1, rand_state);
     }
 }
 
@@ -171,6 +174,23 @@ int main() {
 
     int num_pixels = nx*ny;
     size_t fb_size = num_pixels*sizeof(vec3);
+
+    //Set bigger heap size
+    size_t heapSize = 0;
+    checkCudaErrors(cudaDeviceGetLimit(&heapSize, cudaLimitMallocHeapSize));
+    std::cerr << "Initial heap size: " << heapSize/(1024*1024) << "MB\n";
+    size_t newHeapSize = 1024 * 1024 * 200;
+    checkCudaErrors(cudaDeviceSetLimit(cudaLimitMallocHeapSize, newHeapSize));
+    checkCudaErrors(cudaDeviceGetLimit(&heapSize, cudaLimitMallocHeapSize));
+    std::cerr << "Modified heap size: " << heapSize/(1024*1024) << "MB\n";
+    size_t stackSize = 0;
+    checkCudaErrors(cudaDeviceGetLimit(&stackSize, cudaLimitStackSize));
+    std::cerr << "Initial stack size: " << stackSize/1024 << "kB\n";
+    size_t newStackSize = 1024 * 10;
+    checkCudaErrors(cudaDeviceSetLimit(cudaLimitStackSize, newStackSize));
+    checkCudaErrors(cudaDeviceGetLimit(&stackSize, cudaLimitStackSize));
+    std::cerr << "Modified heap size: " << stackSize/1024 << "kB\n";
+
 
     // allocate FB
     vec3 *fb;

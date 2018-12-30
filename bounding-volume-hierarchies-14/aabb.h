@@ -27,7 +27,11 @@ __device__ inline bool aabb::hit(const ray& r, float tmin, float tmax) const
         float t0 = (min()[i] - r.origin()[i]) * invD;
         float t1 = (max()[i] - r.origin()[i]) * invD;
         if(invD < 0.0f)
-            std::swap(t0, t1);
+        {
+            float tmp = t0;
+            t0 = t1;
+            t1 = tmp;
+        }
         tmin = t0 > tmin ? t0 : tmin;
         tmax = t1 < tmax ? t1 : tmax;
         if (tmax <= tmin)
