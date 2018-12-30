@@ -189,7 +189,7 @@ int main() {
     size_t newStackSize = 1024 * 10;
     checkCudaErrors(cudaDeviceSetLimit(cudaLimitStackSize, newStackSize));
     checkCudaErrors(cudaDeviceGetLimit(&stackSize, cudaLimitStackSize));
-    std::cerr << "Modified heap size: " << stackSize/1024 << "kB\n";
+    std::cerr << "Modified stack size: " << stackSize/1024 << "kB\n";
 
 
     // allocate FB
