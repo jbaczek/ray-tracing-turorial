@@ -81,7 +81,7 @@ __global__ void create_scene3(hitable** d_list, hitable** d_world, curandState* 
     if(threadIdx.x==0 && blockIdx.x==0)
     {
         perlin* noise = new perlin(rand_state);
-        e_texture* pertext = new noise_texture(noise);
+        e_texture* pertext = new noise_texture(noise, 4);
         d_list[0] = new sphere(vec3(0,-1000,0), 1000, new lambertian(pertext));
         d_list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(pertext));
 
