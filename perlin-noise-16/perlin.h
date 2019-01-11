@@ -47,16 +47,18 @@ class perlin
         __device__ float turb(const vec3& p, int depth=7) const
         {
             float accum = 0;
-            vec3 temp_p = p;
-            float weight = 0.5;
+            float freq = 1;
+            float amp = 1;
+            float max_val = 0;
             for(int i=0; i<depth; i++)
             {
-                accum += weight*noise(temp_p);
-                weight *= 0.5;
-                temp_p *= 2;
+                accum += amp*noise(freq * p);
+                max_val += amp;
+                amp *= 0.5;
+                freq *= 2;
             }
 
-            return accum;
+            return accum/max_val;
         }
 
         vec3* ranvec;
@@ -125,9 +127,8 @@ __device__ inline float perlin_interpolation(vec3 c[2][2][2], float u, float v, 
                 accum += (i*uu + (1-i)*(1-uu))*
                          (j*vv + (1-j)*(1-vv))*
                          (k*ww + (1-k)*(1-ww))*
-                         (dot(weight_v, c[i][j][k])+3)/6;
+                         (dot(weight_v, c[i][j][k])+1)/2;
             }
-
     return accum;
 }
 #endif
