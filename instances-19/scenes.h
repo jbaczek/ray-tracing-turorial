@@ -160,8 +160,8 @@ __global__ void create_scene6(hitable** d_list, hitable** d_world, curandState* 
         d_list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
         d_list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
         d_list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
-        d_list[i++] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
-        d_list[i++] = new box(vec3(265, 0, 295), vec3(430, 330, 460), white);
+        d_list[i++] = new translate(new rotate_y(new box(vec3(0,0,0), vec3(165,165,165), white), -18), vec3(130,0,65));
+        d_list[i++] = new translate(new rotate_y(new box(vec3(0,0,0), vec3(165,330,165), white), 15), vec3(265,0,265));
        
         *d_world = new hitable_list(d_list, i);
     }
