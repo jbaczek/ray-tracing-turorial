@@ -30,10 +30,10 @@ __global__ void create_camera(camera** cam, int nx, int ny)
 {
     if(threadIdx.x==0 && blockIdx.x==0)
     {
-        vec3 lookfrom(15, 5, 3);
-        vec3 lookat(0.0, 0.5, 0);
+        vec3 lookfrom(278, 278, -800);
+        vec3 lookat(278, 278, 0);
         vec3 vup(0, 1, 0);
-        float vfov = 30.0;
+        float vfov = 40.0;
         float aspect = float(nx)/float(ny);
         float aperture = 0.0;
         float focus_dist = (lookat-lookfrom).length();
@@ -189,11 +189,11 @@ int main() {
 
     // create world
     hitable **d_list;
-    int num_hitables = 4;
+    int num_hitables = 6;
     checkCudaErrors(cudaMalloc((void**) &d_list, num_hitables*sizeof(hitable*))); 
     hitable **d_world;
     checkCudaErrors(cudaMalloc((void**) &d_world, sizeof(hitable*)));
-    create_scene5<<<1,1>>>(d_list,d_world, d_rand_state2);
+    create_scene6<<<1,1>>>(d_list,d_world, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -218,7 +218,7 @@ int main() {
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     // Output FB as Image
-    std::cout << "P3\n" << nx << " " << ny << "\n511\n";
+    std::cout << "P3\n" << nx << " " << ny << "\n255\n";
     for (int j = ny-1; j >= 0; j--) {
         for (int i = 0; i < nx; i++) {
             size_t pixel_index = j*nx + i;
@@ -230,7 +230,7 @@ int main() {
     }
 
     checkCudaErrors(cudaDeviceSynchronize());
-    free_scene5<<<1,1>>>(d_list, d_world);
+    free_scene6<<<1,1>>>(d_list, d_world);
     checkCudaErrors(cudaGetLastError());
     free_camera<<<1,1>>>(d_cam);
     checkCudaErrors(cudaGetLastError());

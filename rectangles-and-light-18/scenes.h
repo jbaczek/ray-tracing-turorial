@@ -139,8 +139,45 @@ __global__ void free_scene5(hitable** d_list, hitable** d_world)
         delete((sphere*)d_list[i])->mat_ptr;
         delete d_list[i];
     }
-    delete((xy_rect*)d_list[3])->mat;
+    delete((xy_rect*)d_list[3])->mat_ptr;
     delete d_list[3];
     delete *d_world;
+}
+
+__global__ void create_scene6(hitable** d_list, hitable** d_world, curandState* rand_state)
+{
+    if(threadIdx.x==0 && blockIdx.x==0)
+    {
+        int i=0;
+        material* red   = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+        material* white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+        material* green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+        material* light = new diffuse_light(new constant_texture(vec3(15, 15, 15)));
+        d_list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
+        d_list[i++] = new yz_rect(0, 555, 0, 555, 0,   red);
+        d_list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
+        d_list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
+        d_list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
+        d_list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
+       
+        *d_world = new hitable_list(d_list, i);
+    }
+}
+
+__global__ void free_scene6(hitable** d_list, hitable** d_world)
+{
+    delete ((yz_rect*)((flip_normals*)d_list[0])->ptr)->mat_ptr;
+    delete ((flip_normals*)d_list[0])->ptr;
+    delete ((yz_rect*)d_list[1])->mat_ptr;
+    delete ((xz_rect*)d_list[2])->mat_ptr;
+    delete ((xz_rect*)((flip_normals*)d_list[3])->ptr)->mat_ptr;
+    delete ((flip_normals*)d_list[3])->ptr;
+    delete ((flip_normals*)d_list[5])->ptr;
+    for(int i=0; i<6; i++)
+    {
+        delete d_list[i];
+    }
+    delete *d_world;
+    
 }
 #endif
